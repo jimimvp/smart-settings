@@ -66,16 +66,23 @@ def loads(s, *, dynamic=True, make_immutable=False, recursive_imports=True,
     return _post_load(orig_dict, dynamic, make_immutable, post_unpack_hooks)
 
 
-def _post_load(current_dict, dynamic, make_immutable, post_unpack_hooks):
-    # to avoid that list of keys gets updated during loop
-    keys = list(current_dict.keys())
-    for key in keys:
+def _recursive_suffix_update(current_dict):
+    for key in current_dict:
         if key.endswith("*") and isinstance(current_dict[key], collections.abc.Sequence):
             raw_key = removesuffix(key, "*")
             current_dict[raw_key] = current_dict.pop(key)
         elif key.endswith("_") and isinstance(current_dict[key], collections.abc.Sequence):
+            print("Removing key")
             raw_key = removesuffix(key, "_")
             current_dict[raw_key] = current_dict.pop(key)
+        elif isinstance(current_dict[key], dict):
+            current_dict[key] = _recursive_suffix_update(current_dict[key])
+    return current_dict
+
+
+def _post_load(current_dict, dynamic, make_immutable, post_unpack_hooks):
+    # to avoid that list of keys gets updated during loop
+    current_dict = _recursive_suffix_update(current_dict)
     if dynamic:
         objectified = recursive_objectify(current_dict, make_immutable=False)
         timestamp = datetime.now().strftime('%H:%M:%S-%d%h%y')
