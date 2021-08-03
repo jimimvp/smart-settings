@@ -21,7 +21,6 @@ def load_raw_dict_from_file(filename):
         return data
 
 
-
 def load(filename, dynamic=True, make_immutable=True, recursive_imports=True,
          pre_unpack_hooks=None, post_unpack_hooks=None):
     """ Read from a bytestream and deserialize to a settings object"""
@@ -53,7 +52,8 @@ def loads(s, *, dynamic=True, make_immutable=False, recursive_imports=True,
         try:
             orig_dict = yaml.safe_load(s)
         except yaml.YAMLError as e_yaml:
-            raise SyntaxError(f"JSON and YAML parsing failed: {e_json}, {e_yaml}")
+            raise SyntaxError(
+                f"JSON and YAML parsing failed: {e_json}, {e_yaml}")
 
     for hook in pre_unpack_hooks:
         hook(orig_dict)
@@ -67,12 +67,15 @@ def loads(s, *, dynamic=True, make_immutable=False, recursive_imports=True,
 
 
 def _post_load(current_dict, dynamic, make_immutable, post_unpack_hooks):
-    keys = list(current_dict.keys())  # to avoid that list of keys gets updated during loop
+    # to avoid that list of keys gets updated during loop
+    keys = list(current_dict.keys())
     for key in keys:
         if key.endswith("*") and isinstance(current_dict[key], collections.abc.Sequence):
             raw_key = removesuffix(key, "*")
             current_dict[raw_key] = current_dict.pop(key)
-
+        elif key.endswith("_") and isinstance(current_dict[key], collections.abc.Sequence):
+            raw_key = removesuffix(key, "_")
+            current_dict[raw_key] = current_dict.pop(key)
     if dynamic:
         objectified = recursive_objectify(current_dict, make_immutable=False)
         timestamp = datetime.now().strftime('%H:%M:%S-%d%h%y')
@@ -107,7 +110,8 @@ def unpack_imports_fixed_level(orig_dict, import_string, used_filenames):
     """
 
     if import_string in orig_dict:
-        new_files = orig_dict[import_string] # type(orig_dict[import_string]) in [str, list]
+        # type(orig_dict[import_string]) in [str, list]
+        new_files = orig_dict[import_string]
         if isinstance(new_files, str):
             new_files = [new_files]
         del orig_dict[import_string]
@@ -130,6 +134,7 @@ if __name__ == '__main__':
     def check_import_in_fixed_params(setting_dict):
         if "fixed_params" in setting_dict:
             if "__import__" in setting_dict['fixed_params']:
-                raise ImportError("Cannot import inside fixed params. Did you mean __import_promise__?")
+                raise ImportError(
+                    "Cannot import inside fixed params. Did you mean __import_promise__?")
     params = load(sys.argv[1], pre_unpack_hooks=[check_import_in_fixed_params])
     print(params)

@@ -92,10 +92,12 @@ def update_recursive(d, u, overwrite=False):
             raw_key = removesuffix(k, '*')
             if raw_key + "*" in d:  # append
                 d[raw_key + "*"] = deepcopy(v + d[raw_key + '*'])
+            elif raw_key + "_" in d:
+                pass
             elif raw_key in d:  # keep original list
                 pass
             else:  # key does not exist yet, append
-                d[k] = v 
+                d[k] = v
         elif k not in d or overwrite:
             d[k] = v
     return d
