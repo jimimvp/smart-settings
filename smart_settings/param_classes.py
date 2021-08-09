@@ -86,14 +86,15 @@ def recursive_objectify(nested_dict, make_immutable=True):
 
 def update_recursive(d, u, overwrite=False):
     for k, v in u.items():
+        raw_key = removesuffix(k, '_')
+        if raw_key + "_" in d:
+            continue
         if isinstance(v, collections.abc.Mapping):
             d[k] = update_recursive(d.get(k, {}), v, overwrite)
         if isinstance(v, collections.abc.Sequence):
             raw_key = removesuffix(k, '*')
             if raw_key + "*" in d:  # append
                 d[raw_key + "*"] = deepcopy(v + d[raw_key + '*'])
-            elif raw_key + "_" in d:
-                pass
             elif raw_key in d:  # keep original list
                 pass
             else:  # key does not exist yet, append

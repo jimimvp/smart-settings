@@ -67,12 +67,11 @@ def loads(s, *, dynamic=True, make_immutable=False, recursive_imports=True,
 
 
 def _recursive_suffix_update(current_dict):
-    for key in current_dict:
+    for key in list(current_dict.keys()):
         if key.endswith("*") and isinstance(current_dict[key], collections.abc.Sequence):
             raw_key = removesuffix(key, "*")
             current_dict[raw_key] = current_dict.pop(key)
-        elif key.endswith("_") and isinstance(current_dict[key], collections.abc.Sequence):
-            print("Removing key")
+        elif key.endswith("_"):
             raw_key = removesuffix(key, "_")
             current_dict[raw_key] = current_dict.pop(key)
         elif isinstance(current_dict[key], dict):
