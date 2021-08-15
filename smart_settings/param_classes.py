@@ -1,6 +1,7 @@
 import collections
 from copy import deepcopy
 import json
+from typing import Iterable
 from .utils import removesuffix
 
 
@@ -86,9 +87,13 @@ def recursive_objectify(nested_dict, make_immutable=True):
 
 def update_recursive(d, u, overwrite=False):
     for k, v in u.items():
-        raw_key = removesuffix(k, '_')
-        if raw_key + "_" in d:
+        if d.get(k, None) is None:
+            d[k] = v
             continue
+        if isinstance(d, Iterable):
+            raw_key = removesuffix(k, '_')
+            if raw_key + "_" in d:
+                continue
         if isinstance(v, collections.abc.Mapping):
             d[k] = update_recursive(d.get(k, {}), v, overwrite)
         if isinstance(v, collections.abc.Sequence):
